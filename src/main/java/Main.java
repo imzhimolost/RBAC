@@ -1,7 +1,4 @@
-import model.User;
-import model.Permission;
-import model.Role;
-import model.AssignmentMetadata;
+import model.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -44,6 +41,27 @@ public class Main {
 
         AssignmentMetadata assignment = AssignmentMetadata.now("ivan2008", "some reason");
         System.out.println(assignment.format());
+
+        System.out.println("\n-----Тест седьмого точка первого пункта-----\n");
+
+        User user = User.create("assigmenttest", "Тест Тестович Тест", "test@example.com");
+        Role roleAssigment = new Role("moderator", "test for assigment");
+        AssignmentMetadata assignmenttest = AssignmentMetadata.now("ivan2008", "some reason");
+        PermanentAssignment permanent = new PermanentAssignment(user, roleAssigment,assignmenttest);
+        System.out.println(permanent.assignmentType());
+        System.out.println(permanent.isActive());
+        permanent.revoke();
+        System.out.println(permanent.isActive());
+        System.out.println(permanent.isRevoked());
+        System.out.println(permanent.summary());
+
+        System.out.println("\n-----Тест седьмого точка второго пункта-----\n");
+
+        TemporaryAssignment temporaryAssignmentTest = new TemporaryAssignment(user, roleAssigment, assignmenttest, "29.03.2026 00:00:00");
+        System.out.println(temporaryAssignmentTest.assignmentType());
+        System.out.println(temporaryAssignmentTest.isActive());
+        System.out.println(temporaryAssignmentTest.isExpired());
+        System.out.println(temporaryAssignmentTest.summary());
     }
 
     public static void test(String testname, String username, String fullName, String email){
