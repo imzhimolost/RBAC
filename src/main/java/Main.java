@@ -1,4 +1,5 @@
 import model.User;
+import model.Permission;
 
 public class Main {
     public static void main(String[] args) {
@@ -18,6 +19,11 @@ public class Main {
         System.out.println("Тест имеил");
         test("Нет собачки", "ivan2008", "Иван Иванов Иванович","ivan2008example.com" );
         test("Нет точки", "ivan2008", "Иван Иванов Иванович","ivan2008@examplecom" );
+
+        System.out.println("Тест второго пункта");
+
+        Permission permission = new Permission("WRITE", "ivan2008", "write some data");
+        System.out.println(permission.format());
     }
 
     public static void test(String testname, String username, String fullName, String email){
