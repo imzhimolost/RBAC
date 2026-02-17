@@ -1,6 +1,7 @@
 import model.User;
 import model.Permission;
 import model.Role;
+import model.AssignmentMetadata;
 
 public class Main {
     public static void main(String[] args) {
@@ -38,6 +39,11 @@ public class Main {
         System.out.println(role.equals(role));
         System.out.println(role.toString());
         System.out.println(role.format());
+
+        System.out.println("\n-----Тест четвертого пункта-----\n");
+
+        AssignmentMetadata assignment = AssignmentMetadata.now("ivan2008", "some reason");
+        System.out.println(assignment.format());
     }
 
     public static void test(String testname, String username, String fullName, String email){
