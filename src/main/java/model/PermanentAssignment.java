@@ -9,7 +9,7 @@ public class PermanentAssignment extends AbstractRoleAssignment{
     }
 
     public void revoke(){
-        revoked = false;
+        revoked = true;
     }
 
     public boolean isRevoked(){
