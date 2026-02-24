@@ -43,6 +43,10 @@ public class Role {
         return permissions;
     }
 
+    public String getName() { return name; }
+    public String getId() { return id; }
+    public String getDescription() { return description; }
+
     @Override
     public boolean equals(Object o){
         if (this == o) return true;
