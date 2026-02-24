@@ -1,0 +1,14 @@
+package filters;
+
+import model.Role;
+import java.util.Comparator;
+
+public class RoleSorters {
+    public Comparator<Role> byName(){
+        return Comparator.comparing(Role::getName);
+    }
+
+    public Comparator<Role> byPermissionCount(){
+        return Comparator.comparing(role -> role.getPermissions().size());
+    }
+}
