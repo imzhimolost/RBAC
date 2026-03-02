@@ -1,11 +1,10 @@
 package managers;
 
 import filters.AssignmentFilter;
-import model.Permission;
-import model.Role;
-import model.RoleAssignment;
-import model.User;
+import model.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -82,13 +81,24 @@ public class AssignmentManager implements Repository<RoleAssignment>{
         return new ArrayList<>(assignments.values());
     }
 
-//    public void revokeAssignment(String assignmentId){
-//        findById(assignmentId).ifPresent(roleAssignment -> roleAssignment.);
-//    }
-//
-//    public void extendTemporaryAssignment(String assignmentId, String newExpirationDate){
-//
-//    }
+    public void revokeAssignment(String assignmentId){
+        RoleAssignment assignment = assignments.get(assignmentId);
+        if (assignment instanceof PermanentAssignment) {
+            PermanentAssignment permAssigment = (PermanentAssignment) assignment;
+
+            permAssigment.revoke();
+        }
+    }
+
+    public void extendTemporaryAssignment(String assignmentId, String newExpirationDate){
+        RoleAssignment assignment = assignments.get(assignmentId);
+        if (assignment instanceof TemporaryAssignment) {
+            TemporaryAssignment tempAssognment = (TemporaryAssignment) assignment;
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+            tempAssognment.extend(LocalDateTime.parse(newExpirationDate, formatter).toString());
+        }
+    }
 
     @Override public boolean remove(RoleAssignment a) {
         return assignments.remove(a.assignmentId()) != null;
