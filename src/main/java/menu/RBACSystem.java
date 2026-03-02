@@ -30,6 +30,9 @@ public class RBACSystem {
     }
 
     public void setCurrentUser(String username){
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username must be not null");
+        }
         currentUser = username;
     }
 
