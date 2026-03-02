@@ -1,8 +1,12 @@
 package filters;
 
 import model.RoleAssignment;
+import model.TemporaryAssignment;
 import model.User;
 import model.Role;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class AssignmentFilters {
     public AssignmentFilter byUser(User user){
@@ -42,6 +46,17 @@ public class AssignmentFilters {
     }
 
     public AssignmentFilter expiringBefore(String date){
-        return assignment -> assignment.assignmentType().equals("TEMPORARY") && !assignment.isActive();
+        return assignment -> {
+            if (!(assignment instanceof TemporaryAssignment)) {
+                return false;
+            }
+
+            TemporaryAssignment tempAssignment = (TemporaryAssignment) assignment;
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+            LocalDateTime dateExpire = LocalDateTime.parse(tempAssignment.getExpiresAt(), formatter);
+            LocalDateTime dateFilter = LocalDateTime.parse(date, formatter);
+            return dateExpire.isBefore(dateFilter);
+        };
     }
 }
