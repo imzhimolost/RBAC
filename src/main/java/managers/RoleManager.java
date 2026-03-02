@@ -15,14 +15,24 @@ public class RoleManager implements Repository<Role>{
         if(rolesByName.containsKey(role.getName())){
             throw new IllegalArgumentException("Role name must be unique");
         }
+        if(rolesById.containsKey(role.getId())){
+            throw new IllegalArgumentException("Role ID must be unique");
+        }
+
         rolesByName.put(role.getName(), role);
         rolesById.put(role.getId(), role);
     }
 
     @Override
     public boolean remove(Role role){
-        rolesByName.remove(role.getName());
-        return rolesById.remove(role.getId()) != null;
+        Role removedRole = rolesById.remove(role.getId());
+
+        if(removedRole != null){
+            rolesByName.remove(removedRole.getName());
+            return true;
+        }
+
+        return false;
     }
 
     @Override
