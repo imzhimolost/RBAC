@@ -25,6 +25,10 @@ public class TemporaryAssignment extends AbstractRoleAssignment{
         return datenow.isAfter(dateexpire);
     }
 
+    public String getExpiresAt() {
+        return expiresAt;
+    }
+
     @Override
     public String summary(){
         return String.format("[%s] %s assigned to %s by %s at %s \nReason: %s \nStatus: %s\nExpires at: %s",
