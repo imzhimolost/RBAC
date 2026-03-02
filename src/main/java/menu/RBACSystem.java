@@ -11,6 +11,12 @@ public class RBACSystem {
     AssignmentManager assignmentManager;
     String currentUser;
 
+    public RBACSystem() {
+        this.userManager = new UserManager();
+        this.roleManager = new RoleManager();
+        this.assignmentManager = new AssignmentManager();
+    }
+
     public UserManager getUserManager() {
         return userManager;
     }
@@ -57,6 +63,6 @@ public class RBACSystem {
     }
 
     public String generateStatistics(){
-        return "STATS:\nNumber of users: " + userManager.count() + "\nNumber of roles:" + roleManager.count() + "\nNumber of assignments: " + assignmentManager.count() + "\n";
+        return "STATS:\nNumber of users: " + userManager.count() + "\nNumber of roles: " + roleManager.count() + "\nNumber of assignments: " + assignmentManager.count() + "\n";
     }
 }
