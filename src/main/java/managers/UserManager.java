@@ -54,7 +54,7 @@ public class UserManager implements Repository<User>{
         return users.containsKey(username);
     }
 
-    void update(String username, String newFullName, String newEmail){
+    public void update(String username, String newFullName, String newEmail){
         if (!exists(username)) {
             throw new NoSuchElementException("No such user in data");
         }
