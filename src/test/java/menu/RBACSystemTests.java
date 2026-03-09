@@ -12,9 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class RBACSystemTests {
     private RBACSystem testRBAC;
-    private UserManager testUserManager;
-    private RoleManager testRoleManager;
-    private AssignmentManager testAssignmentsManager;
 
     @BeforeEach
     void setUp() {
