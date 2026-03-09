@@ -1,10 +1,16 @@
 package menu;
 
+import filters.RoleFilter;
+import filters.RoleFilters;
 import filters.UserFilter;
+import model.Permission;
+import model.Role;
 import model.User;
+
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 
 public class CommandRegistry {
 
@@ -129,6 +135,156 @@ public class CommandRegistry {
                 printUserTable(results);
             }
         });
+
+        //2. Команды управления ролями
+        parser.registerCommand("role-list", "Вывести список всех ролей", (scanner, system) -> {
+            List<Role> roles = system.getRoleManager().findAll();
+            if (roles.isEmpty()) {
+                System.out.println("Список ролей пуст.");
+            } else {
+                printRoleTable(roles);
+            }
+        });
+
+        parser.registerCommand("role-create", "Создать новую роль", (scanner, system) -> {
+            System.out.print("Название роли: ");
+            String name = scanner.nextLine();
+            System.out.print("Описание роли: ");
+            String description = scanner.nextLine();
+            try {
+                Role role = new Role(name, description);
+                system.getRoleManager().add(role);
+                System.out.println("Роль создана.");
+            } catch (Exception e) {
+                System.out.println("Ошибка: " + e.getMessage());
+            }
+        });
+
+        parser.registerCommand("role-view", "Просмотр роли", (scanner, system) -> {
+            System.out.print("Введите название роли: ");
+            String name = scanner.next();
+
+            Optional<Role> roleOptional = system.getRoleManager().findByName(name);
+
+            if(roleOptional.isPresent()){
+                Role role = roleOptional.get();
+                System.out.println(role.format());
+            } else {
+                System.out.println("Роль не найдена.");
+            }
+        });
+
+        //parser.registerCommand("role-update", "Обновить роль", (scanner, system) -> {});
+
+        parser.registerCommand("role-delete", "Удалить роль", (scanner, system) -> {
+            System.out.print("Введите название роли: ");
+            String name = scanner.next();
+
+            Optional<Role> roleOptional = system.getRoleManager().findByName(name);
+
+            if(roleOptional.isEmpty()){
+                System.out.println("Роль не найдена.");
+                return;
+            }
+
+            System.out.print("Подтвердить удаление? (введите 'да'): ");
+            if (scanner.nextLine().equalsIgnoreCase("да")) {
+                system.getRoleManager().remove(roleOptional.get());
+                System.out.println("Роль удалена.");
+            }
+        });
+
+        parser.registerCommand("role-add-permission", "Добавить право к роли", (scanner, system) -> {
+            System.out.print("Имя роли: ");
+            String rName = scanner.nextLine();
+            System.out.print("Имя права: ");
+            String pName = scanner.nextLine();
+            System.out.print("Ресурс: ");
+            String pRes = scanner.nextLine();
+
+            try {
+                system.getRoleManager().addPermissionToRole(rName, new Permission(pName, pRes, "Описание"));
+                System.out.println("Право добавлено.");
+            } catch (Exception e) {
+                System.out.println("Ошибка: " + e.getMessage());
+            }
+        });
+
+        parser.registerCommand("role-remove-permission", "Удалить право из роли", (scanner, system) -> {
+            System.out.print("Имя роли: ");
+            String rName = scanner.nextLine();
+
+            Optional<Role> rOpt = system.getRoleManager().findByName(rName);
+
+            if (rOpt.isEmpty()) {
+                System.out.println("Роль не найдена.");
+                return;
+            }
+
+            List<Permission> perms = new ArrayList<>(rOpt.get().getPermissions());
+
+            for (int i = 0; i < perms.size(); i++) {
+                System.out.println((i + 1) + ". " + perms.get(i).name() + " on " + perms.get(i).resource());
+            }
+
+            System.out.print("Номер для удаления: ");
+            int idx = Integer.parseInt(scanner.nextLine()) - 1;
+            if (idx >= 0 && idx < perms.size()) {
+                Permission p = perms.get(idx);
+                system.getRoleManager().removePermissionFromRole(rName, p);
+                System.out.println("Право удалено.");
+            }
+        });
+
+        parser.registerCommand("role-search", "Поиск ролей по фильтрам", (scanner, system) -> {
+            System.out.println("\nВыберите фильтр для ролей:");
+            System.out.println("1. По имени (содержит)");
+            System.out.println("2. По наличию конкретного права (Name + Resource)");
+            System.out.println("3. По минимальному количеству прав");
+            System.out.print("Ваш выбор: ");
+
+            String choice = scanner.next();
+            RoleFilters filterFactory = new RoleFilters();
+            RoleFilter filter = null;
+
+            switch (choice) {
+                case "1" -> {
+                    System.out.print("Введите часть названия роли: ");
+                    String sub = scanner.next();
+                    filter = filterFactory.byNameContains(sub);
+                }
+                case "2" -> {
+                    System.out.print("Введите название права (напр. READ): ");
+                    String pName = scanner.next();
+                    System.out.print("Введите ресурс (напр. settings): ");
+                    String resource = scanner.next();
+                    filter = filterFactory.hasPermission(pName, resource);
+                }
+                case "3" -> {
+                    System.out.print("Введите минимальное количество прав: ");
+                    if (scanner.hasNextInt()) {
+                        int n = scanner.nextInt();
+                        filter = filterFactory.hasAtLeastNPermissions(n);
+                    } else {
+                        System.out.println("Ошибка: ожидалось число.");
+                        scanner.next();
+                        return;
+                    }
+                }
+                default -> {
+                    System.out.println("Неверный выбор.");
+                    return;
+                }
+            }
+
+            List<Role> roles = system.getRoleManager().findAll(filter, Comparator.comparing(Role::getName));
+
+            if (roles.isEmpty()) {
+                System.out.println("Роли не найдены.");
+            } else {
+                printRoleTable(roles);
+            }
+        });
     }
 
     private static void printUserTable(List<User> users) {
@@ -140,6 +296,19 @@ public class CommandRegistry {
                     user.username(),
                     user.fullName(),
                     user.email());
+        }
+        System.out.println("-".repeat(70));
+    }
+
+    private static void printRoleTable(List<Role> roles) {
+        System.out.println("-".repeat(70));
+        System.out.printf("| %-25s | %-15s | %s |\n", "Название", "Кол-во прав", "ID");
+        System.out.println("-".repeat(70));
+        for (Role role : roles) {
+            System.out.printf("| %-25s | %-15s | %s |\n",
+                    role.getName(),
+                    role.getPermissions().size(),
+                    role.getId());
         }
         System.out.println("-".repeat(70));
     }
