@@ -42,7 +42,13 @@ public class AssignmentFilters {
     }
 
     public AssignmentFilter assignedAfter(String date){
-        return assignment -> assignment.metadata().assignedAt().compareTo(date) > 0;
+        return assignment -> {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+            LocalDateTime dateFilter = LocalDateTime.parse(date, formatter);
+            LocalDateTime dateAssigned = LocalDateTime.parse(assignment.metadata().assignedAt(), formatter);
+
+            return dateAssigned.isAfter(dateFilter);
+        };
     }
 
     public AssignmentFilter expiringBefore(String date){
