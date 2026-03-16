@@ -3,11 +3,9 @@ package menu;
 import filters.*;
 import model.*;
 import util.AuditLog;
+import util.ReportGenerator;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class CommandRegistry {
 
@@ -575,6 +573,34 @@ public class CommandRegistry {
         parser.registerCommand("audit-log", "Просмотр логов", ((scanner, system) -> {
             AuditLog.getInstance().printLog();
         }));
+
+        //RBAC 4: Логирование
+        parser.registerCommand("report-users", "Репорт по пользователям", ((scanner, system) -> {
+            String report = new ReportGenerator().generateUserReport(system.userManager, system.assignmentManager);
+            System.out.println(report);
+            handleExport(scanner, report);
+        }));
+
+        parser.registerCommand("report-roles", "Репорт по ролям", ((scanner, system) -> {
+            String report = new ReportGenerator().generateRoleReport(system.roleManager, system.assignmentManager);
+            System.out.println(report);
+            handleExport(scanner, report);
+        }));
+
+        parser.registerCommand("report-matrix", "Репорт-матрица", ((scanner, system) -> {
+            String report = new ReportGenerator().generatePermissionMatrix(system.userManager, system.assignmentManager);
+            System.out.println(report);
+            handleExport(scanner, report);
+        }));
+    }
+
+    private static void handleExport(Scanner scanner, String report) {
+        System.out.print("Сохранить отчет в файл? (да/нет): ");
+        if (scanner.nextLine().equalsIgnoreCase("да")) {
+            System.out.print("Введите имя файла: ");
+            String filename = scanner.nextLine();
+            new ReportGenerator().exportToFile(report, filename);
+        }
     }
 
     private static void printUserTable(List<User> users) {
