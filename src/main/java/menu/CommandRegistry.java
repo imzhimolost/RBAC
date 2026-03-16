@@ -2,6 +2,7 @@ package menu;
 
 import filters.*;
 import model.*;
+import util.AuditLog;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -9,6 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 public class CommandRegistry {
+
+    private static void logging(String action, RBACSystem system, String target, String details){
+        AuditLog.getInstance().log(action, system.getCurrentUser(), target, details);
+    }
 
     public static void register(CommandParser parser) {
 
@@ -23,9 +28,10 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("user-create", "Создать нового пользователя", (scanner, system) -> {
+            String username = null;
             try {
                 System.out.print("Введите username: ");
-                String username = scanner.next();
+                username = scanner.next();
 
                 System.out.print("Введите полное имя (fullName): ");
                 scanner.nextLine();
@@ -35,15 +41,18 @@ public class CommandRegistry {
                 String email = scanner.next();
 
                 if (username.isBlank() || fullName.isBlank() || !email.contains("@")) {
+                    logging("user-create", system, username, "[ERROR] Data error");
                     System.out.println("Ошибка: Некорректные данные (пустые поля или неверный email).");
                     return;
                 }
 
                 User newUser = User.create(username, fullName, email);
                 system.getUserManager().add(newUser);
+                logging("user-create", system, username, "[SUCCESS] User created");
                 System.out.println("Пользователь успешно создан!");
 
             } catch (Exception e) {
+                logging("user-create", system, username, "[ERROR] " + e.getMessage());
                 System.out.println("Ошибка при создании пользователя: " + e.getMessage());
             }
         });
@@ -89,6 +98,7 @@ public class CommandRegistry {
             Optional<User> userOptional = system.getUserManager().findByUsername(username);
 
             if(userOptional.isEmpty()){
+                logging("user-delete", system, username, "[ERROR] No such user");
                 System.out.println("Пользователь не найден.");
                 return;
             }
@@ -96,6 +106,7 @@ public class CommandRegistry {
             System.out.print("Подтвердить удаление? (введите 'да'): ");
             if (scanner.nextLine().equalsIgnoreCase("да")) {
                 system.getUserManager().remove(userOptional.get());
+                logging("user-delete", system, username, "[SUCCESS] User deleted");
                 System.out.println("Пользователь удален.");
             }
         });
@@ -150,8 +161,10 @@ public class CommandRegistry {
             try {
                 Role role = new Role(name, description);
                 system.getRoleManager().add(role);
+                logging("role-create", system, name, "[SUCCESS] Role created");
                 System.out.println("Роль создана.");
             } catch (Exception e) {
+                logging("role-create", system, name, "[ERROR] " + e.getMessage());
                 System.out.println("Ошибка: " + e.getMessage());
             }
         });
@@ -179,6 +192,7 @@ public class CommandRegistry {
             Optional<Role> roleOptional = system.getRoleManager().findByName(name);
 
             if(roleOptional.isEmpty()){
+                logging("role-delete", system, name, "[ERROR] No such role");
                 System.out.println("Роль не найдена.");
                 return;
             }
@@ -186,6 +200,7 @@ public class CommandRegistry {
             System.out.print("Подтвердить удаление? (введите 'да'): ");
             if (scanner.nextLine().equalsIgnoreCase("да")) {
                 system.getRoleManager().remove(roleOptional.get());
+                logging("role-delete", system, name, "[SUCCESS] Role deleted");
                 System.out.println("Роль удалена.");
             }
         });
@@ -200,8 +215,10 @@ public class CommandRegistry {
 
             try {
                 system.getRoleManager().addPermissionToRole(rName, new Permission(pName, pRes, "Описание"));
+                logging("role-add-permission", system, rName, "[SUCCESS] Role added");
                 System.out.println("Право добавлено.");
             } catch (Exception e) {
+                logging("role-add-permission", system, rName, "[ERROR] " + e.getMessage());
                 System.out.println("Ошибка: " + e.getMessage());
             }
         });
@@ -213,6 +230,7 @@ public class CommandRegistry {
             Optional<Role> rOpt = system.getRoleManager().findByName(rName);
 
             if (rOpt.isEmpty()) {
+                logging("role-remove-permission", system, rName, "[ERROR] No such role");
                 System.out.println("Роль не найдена.");
                 return;
             }
@@ -228,6 +246,7 @@ public class CommandRegistry {
             if (idx >= 0 && idx < perms.size()) {
                 Permission p = perms.get(idx);
                 system.getRoleManager().removePermissionFromRole(rName, p);
+                logging("role-remove-permission", system, rName, "[SUCCESS] Role removed");
                 System.out.println("Право удалено.");
             }
         });
@@ -310,8 +329,10 @@ public class CommandRegistry {
                 }
 
                 system.getAssignmentManager().add(assignment);
+                logging("assign-role", system, rName, "[SUCCESS] Role assigned");
                 System.out.println("Успешно назначено!");
             } catch (Exception e) {
+                logging("assign-role", system, rName, "[ERROR] " + e.getMessage());
                 System.out.println("Ошибка: " + e.getMessage());
             }
         });
@@ -323,6 +344,7 @@ public class CommandRegistry {
             Optional<User> userOptional = system.getUserManager().findByUsername(uName);
 
             if(userOptional.isEmpty()) {
+                logging("revoke-role", system, uName, "[ERROR] No such user");
                 System.out.println("Пользователь не найден.");
                 return;
             }
@@ -331,6 +353,7 @@ public class CommandRegistry {
                     .stream().filter(RoleAssignment::isActive).toList();
 
             if(active.isEmpty()) {
+                logging("revoke-role", system, uName, "[ERROR] No active roles");
                 System.out.println("Нет активных назначений.");
                 return;
             }
@@ -346,8 +369,10 @@ public class CommandRegistry {
                 int idx = Integer.parseInt(scanner.nextLine()) - 1;
                 String id = active.get(idx).assignmentId();
                 system.getAssignmentManager().revokeAssignment(id);
+                logging("revoke-role", system, uName, "[SUCCESS] Role revoked");
                 System.out.println("Назначение отозвано.");
             } catch (Exception e) {
+                logging("revoke-role", system, uName, "[ERROR] " + e.getMessage());
                 System.out.println("Ошибка: " + e.getMessage());
             }
         });
