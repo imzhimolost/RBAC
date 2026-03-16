@@ -571,6 +571,10 @@ public class CommandRegistry {
                 System.exit(0);
             }
         });
+
+        parser.registerCommand("audit-log", "Просмотр логов", ((scanner, system) -> {
+            AuditLog.getInstance().printLog();
+        }));
     }
 
     private static void printUserTable(List<User> users) {
