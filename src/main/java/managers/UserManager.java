@@ -1,8 +1,8 @@
 package managers;
 
 import filters.UserFilter;
-import model.Role;
 import model.User;
+import util.ValidationUtils;
 
 import java.util.*;
 
@@ -11,6 +11,16 @@ public class UserManager implements Repository<User>{
 
     @Override
     public void add(User user){
+        ValidationUtils.requireNonEmpty(user.username(), "Username");
+        ValidationUtils.requireNonEmpty(user.email(), "Email");
+
+        if (!ValidationUtils.isValidUsername(user.username())) {
+            throw new IllegalArgumentException("Wrong username format");
+        }
+        if (!ValidationUtils.isValidEmail(user.email())) {
+            throw new IllegalArgumentException("Wrong email format");
+        }
+
         if(users.containsKey(user.username())){
             throw new IllegalArgumentException("User already added");
         }
@@ -59,7 +69,14 @@ public class UserManager implements Repository<User>{
             throw new NoSuchElementException("No such user in data");
         }
 
-        User update = User.create(username, newFullName, newEmail);
+        ValidationUtils.requireNonEmpty(newFullName, "Full Name");
+        if (!ValidationUtils.isValidEmail(newEmail)) {
+            throw new IllegalArgumentException("Wrong email format");
+        }
+
+        String normalizedFullName = ValidationUtils.normalizeString(newFullName);
+
+        User update = User.create(username, normalizedFullName, newEmail);
         users.put(username, update);
     }
 

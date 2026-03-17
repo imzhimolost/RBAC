@@ -2,6 +2,7 @@ package managers;
 
 import filters.AssignmentFilter;
 import model.*;
+import util.ValidationUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -13,6 +14,7 @@ public class AssignmentManager implements Repository<RoleAssignment>{
 
     @Override
     public void add(RoleAssignment assignment) {
+        ValidationUtils.requireNonEmpty(assignment.assignmentId(), "Assignment ID");
         boolean duplicate = assignments.values().stream()
                 .filter(a -> a.user().equals(assignment.user()))
                 .filter(a -> a.role().equals(assignment.role()))
@@ -82,6 +84,7 @@ public class AssignmentManager implements Repository<RoleAssignment>{
     }
 
     public void revokeAssignment(String assignmentId){
+        ValidationUtils.requireNonEmpty(assignmentId, "Assignment ID");
         RoleAssignment assignment = assignments.get(assignmentId);
         if (assignment instanceof PermanentAssignment) {
             PermanentAssignment permAssigment = (PermanentAssignment) assignment;
@@ -91,6 +94,7 @@ public class AssignmentManager implements Repository<RoleAssignment>{
     }
 
     public void extendTemporaryAssignment(String assignmentId, String newExpirationDate){
+        ValidationUtils.requireNonEmpty(assignmentId, "Assignment ID");
         RoleAssignment assignment = assignments.get(assignmentId);
         if (assignment instanceof TemporaryAssignment) {
             TemporaryAssignment tempAssognment = (TemporaryAssignment) assignment;

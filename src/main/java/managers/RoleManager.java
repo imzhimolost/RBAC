@@ -3,6 +3,7 @@ package managers;
 import filters.RoleFilter;
 import model.Permission;
 import model.Role;
+import util.ValidationUtils;
 
 import java.util.*;
 
@@ -12,14 +13,19 @@ public class RoleManager implements Repository<Role>{
 
     @Override
     public void add(Role role){
-        if(rolesByName.containsKey(role.getName())){
+        ValidationUtils.requireNonEmpty(role.getName(), "Имя роли");
+        ValidationUtils.requireNonEmpty(role.getDescription(), "Описание роли");
+
+        String normalizedName = ValidationUtils.normalizeString(role.getName());
+
+        if(rolesByName.containsKey(normalizedName)){
             throw new IllegalArgumentException("Role name must be unique");
         }
         if(rolesById.containsKey(role.getId())){
             throw new IllegalArgumentException("Role ID must be unique");
         }
 
-        rolesByName.put(role.getName(), role);
+        rolesByName.put(normalizedName, role);
         rolesById.put(role.getId(), role);
     }
 
@@ -66,10 +72,12 @@ public class RoleManager implements Repository<Role>{
     }
 
     public void addPermissionToRole(String roleName, Permission permission) {
+        ValidationUtils.requireNonEmpty(roleName, "Имя роли");
         findByName(roleName).ifPresent(role -> role.addPermission(permission));
     }
 
     public void removePermissionFromRole(String roleName, Permission permission) {
+        ValidationUtils.requireNonEmpty(roleName, "Имя роли");
         findByName(roleName).ifPresent(role -> role.removePermission(permission));
     }
 
