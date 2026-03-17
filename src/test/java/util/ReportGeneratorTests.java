@@ -14,7 +14,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ReportGeneratorTest {
+public class ReportGeneratorTests {
 
     private ReportGenerator reportGenerator;
     private UserManager userManager;
