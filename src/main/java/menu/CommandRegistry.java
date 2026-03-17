@@ -4,6 +4,7 @@ import filters.*;
 import model.*;
 import util.AuditLog;
 import util.ConsoleUtils;
+import util.FormatUtils;
 import util.ReportGenerator;
 
 import java.util.*;
@@ -22,6 +23,7 @@ public class CommandRegistry {
             if (users.isEmpty()) {
                 System.out.println("Список пользователей пуст.");
             } else {
+                System.out.println(FormatUtils.formatHeader("Список пользователей"));
                 printUserTable(users);
             }
         });
@@ -29,6 +31,7 @@ public class CommandRegistry {
         parser.registerCommand("user-create", "Создать нового пользователя", (scanner, system) -> {
             String username = null;
             try {
+                System.out.println(FormatUtils.formatHeader("Создание пользователя"));
                 username = ConsoleUtils.promptString(scanner, "Введите username", true);
                 String fullName = ConsoleUtils.promptString(scanner, "Введите полное имя (fullName)", true);
                 String email = ConsoleUtils.promptString(scanner, "Введите email", true);
@@ -51,6 +54,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("user-view", "Просмотр информации о пользователе", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Просмотр пользователя"));
             String username = ConsoleUtils.promptString(scanner, "Введите username", true);
 
             Optional<User> userOptional = system.getUserManager().findByUsername(username);
@@ -68,6 +72,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("user-update", "Обновить данные пользователя", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Обновление пользователя"));
             String username = ConsoleUtils.promptString(scanner, "Введите username", true);
             String fullName = ConsoleUtils.promptString(scanner, "Новое полное имя", true);
             String email = ConsoleUtils.promptString(scanner, "Новый email", true);
@@ -81,6 +86,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("user-delete", "Удалить пользователя", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Удаление пользователя"));
             String username = ConsoleUtils.promptString(scanner, "Введите username", true);
 
             Optional<User> userOptional = system.getUserManager().findByUsername(username);
@@ -100,6 +106,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("user-search", "Поиск пользователей по фильтрам", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Поиск пользователей"));
             System.out.println("\nВыберите фильтр:");
             System.out.println("1. По username (содержит)");
             System.out.println("2. По email (содержит)");
@@ -135,11 +142,13 @@ public class CommandRegistry {
             if (roles.isEmpty()) {
                 System.out.println("Список ролей пуст.");
             } else {
+                System.out.println(FormatUtils.formatHeader("Список ролей"));
                 printRoleTable(roles);
             }
         });
 
         parser.registerCommand("role-create", "Создать новую роль", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Создание роли"));
             String name = ConsoleUtils.promptString(scanner, "Название роли", true);
             String description = ConsoleUtils.promptString(scanner, "Описание роли", true);
             try {
@@ -154,6 +163,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("role-view", "Просмотр роли", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Просмотр роли"));
             String name = ConsoleUtils.promptString(scanner, "Введите название роли", true);
 
             Optional<Role> roleOptional = system.getRoleManager().findByName(name);
@@ -169,6 +179,7 @@ public class CommandRegistry {
         //parser.registerCommand("role-update", "Обновить роль", (scanner, system) -> {});
 
         parser.registerCommand("role-delete", "Удалить роль", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Удаление роли"));
             String name = ConsoleUtils.promptString(scanner, "Введите название роли", true);
 
             Optional<Role> roleOptional = system.getRoleManager().findByName(name);
@@ -188,6 +199,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("role-add-permission", "Добавить право к роли", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Добавление права"));
             String rName = ConsoleUtils.promptString(scanner, "Имя роли", true);
             String pName = ConsoleUtils.promptString(scanner, "Имя права", true);
             String pRes = ConsoleUtils.promptString(scanner, "Ресурс", true);
@@ -203,6 +215,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("role-remove-permission", "Удалить право из роли", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Удаление роли"));
             String rName = ConsoleUtils.promptString(scanner, "Имя роли", true);
 
             Optional<Role> rOpt = system.getRoleManager().findByName(rName);
@@ -230,6 +243,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("role-search", "Поиск ролей по фильтрам", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Поиск ролей"));
             System.out.println("\nВыберите фильтр для ролей:");
             System.out.println("1. По имени (содержит)");
             System.out.println("2. По наличию конкретного права (Name + Resource)");
@@ -280,6 +294,7 @@ public class CommandRegistry {
 
         //3. Команды управления назначениями
         parser.registerCommand("assign-role", "Назначить роль пользователю", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Назначение роли"));
             String uName = ConsoleUtils.promptString(scanner, "Username", true);
             String rName = ConsoleUtils.promptString(scanner, "Имя роли", true);
             int type = ConsoleUtils.promptInt(scanner, "Тип (1-Постоянное, 2-Временное)", 1, 2);
@@ -311,6 +326,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("revoke-role", "Отозвать роль у пользователя", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Отзыв роли"));
             String uName = ConsoleUtils.promptString(scanner, "Username", true);
 
             Optional<User> userOptional = system.getUserManager().findByUsername(uName);
@@ -348,6 +364,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("assignment-list", "Список всех назначений", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Список назначений"));
             system.getAssignmentManager().findAll().forEach(a ->
                     System.out.printf("User: %s | Role: %s | Status: %s\n",
                             a.user().username(), a.role().getName(), (a.isActive() ? "ACTIVE" : "INACTIVE"))
@@ -355,6 +372,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("assignment-list-user", "Назначения конкретного пользователя", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Список назначений пользователя"));
             system.getUserManager().findByUsername(ConsoleUtils.promptString(scanner, "Username", true)).ifPresentOrElse(u ->
                             system.getAssignmentManager().findByUser(u).forEach(a ->
                                     System.out.println(a.role().getName() + " [" + (a.isActive() ? "ACTIVE" : "INACTIVE") + "]")),
@@ -363,6 +381,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("assignment-list-role", "Пользователи с конкретной ролью", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Список пользователей с ролью"));
             system.getRoleManager().findByName(ConsoleUtils.promptString(scanner, "Имя роли", true)).ifPresentOrElse(r ->
                             system.getAssignmentManager().findByRole(r).forEach(a ->
                                     System.out.println(a.user().username() + " [" + (a.isActive() ? "ACTIVE" : "INACTIVE") + "]")),
@@ -371,18 +390,21 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("assignment-active", "Только активные назначения", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Список активных назначений"));
             system.getAssignmentManager().getActiveAssignments().forEach(a ->
                     System.out.println(a.user().username() + " -> " + a.role().getName())
             );
         });
 
         parser.registerCommand("assignment-expired", "Истёкшие назначения", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Список истекших назначений"));
             system.getAssignmentManager().getExpiredAssignments().forEach(a ->
                     System.out.println(a.user().username() + " -> " + a.role().getName() + " (Expired)")
             );
         });
 
         parser.registerCommand("assignment-extend", "Продлить временное назначение", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Продление назначения"));
             String id = ConsoleUtils.promptString(scanner, "ID назначения", true);
             String newDate = ConsoleUtils.promptString(scanner, "Новая дата (YYYY-MM-DD)", true);
 
@@ -395,6 +417,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("assignment-search", "Поиск назначений по фильтрам", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Поиск назначения"));
             System.out.println("\nВыберите фильтр для назначений:");
             System.out.println("1. По пользователю");
             System.out.println("2. По роли");
@@ -458,6 +481,7 @@ public class CommandRegistry {
 
         //4. Команды просмотра прав
         parser.registerCommand("permissions-user", "Все права конкретного пользователя", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Права пользователя"));
             String username = ConsoleUtils.promptString(scanner, "Username", true);
             Optional<User> userOptional = system.getUserManager().findByUsername(username);
 
@@ -473,6 +497,7 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("permissions-check", "Проверить право у пользователя", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Проверка права"));
             String username = ConsoleUtils.promptString(scanner, "Username", true);
             String pName = ConsoleUtils.promptString(scanner, "Имя права (например, READ)", true);
             String pRes = ConsoleUtils.promptString(scanner, "Ресурс", true);
@@ -489,10 +514,12 @@ public class CommandRegistry {
 
         //5. Служебные команды
         parser.registerCommand("help", "Справка по командам", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Помощь"));
             parser.printHelp();
         });
 
         parser.registerCommand("stats", "Статистика системы", (scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Статистика"));
             System.out.println(system.generateStatistics());
         });
 
@@ -510,23 +537,27 @@ public class CommandRegistry {
         });
 
         parser.registerCommand("audit-log", "Просмотр логов", ((scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Логи"));
             AuditLog.getInstance().printLog();
         }));
 
         //RBAC 4: Логирование
         parser.registerCommand("report-users", "Репорт по пользователям", ((scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Репорт по пользователям"));
             String report = new ReportGenerator().generateUserReport(system.userManager, system.assignmentManager);
             System.out.println(report);
             handleExport(scanner, report);
         }));
 
         parser.registerCommand("report-roles", "Репорт по ролям", ((scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Репорт по ролям"));
             String report = new ReportGenerator().generateRoleReport(system.roleManager, system.assignmentManager);
             System.out.println(report);
             handleExport(scanner, report);
         }));
 
         parser.registerCommand("report-matrix", "Репорт-матрица", ((scanner, system) -> {
+            System.out.println(FormatUtils.formatHeader("Репорт-матрица"));
             String report = new ReportGenerator().generatePermissionMatrix(system.userManager, system.assignmentManager);
             System.out.println(report);
             handleExport(scanner, report);
