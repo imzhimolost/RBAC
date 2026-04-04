@@ -5,11 +5,16 @@ import managers.RoleManager;
 import managers.UserManager;
 import model.*;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 public class RBACSystem {
     UserManager userManager;
     RoleManager roleManager;
     AssignmentManager assignmentManager;
     String currentUser;
+    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     public RBACSystem() {
         this.userManager = new UserManager();
@@ -38,6 +43,26 @@ public class RBACSystem {
 
     public String getCurrentUser(){
         return currentUser;
+    }
+
+    public void executeAsyncTask(Runnable task){
+        executor.submit(task);
+    }
+
+    public void shutdown(){
+        executor.shutdown();
+        try{
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        }catch (InterruptedException e){
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
     }
 
     public void initialize(){
