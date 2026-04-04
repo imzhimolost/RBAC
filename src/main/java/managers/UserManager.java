@@ -5,9 +5,10 @@ import model.User;
 import util.ValidationUtils;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class UserManager implements Repository<User>{
-    private final Map<String, User> users = new HashMap<>();
+    private final Map<String, User> users = new ConcurrentHashMap<>();
 
     @Override
     public void add(User user){
@@ -21,10 +22,9 @@ public class UserManager implements Repository<User>{
             throw new IllegalArgumentException("Wrong email format");
         }
 
-        if(users.containsKey(user.username())){
+        if(users.putIfAbsent(user.username(), user) != null){
             throw new IllegalArgumentException("User already added");
         }
-        users.put(user.username(), user);
     }
 
     @Override
@@ -65,10 +65,6 @@ public class UserManager implements Repository<User>{
     }
 
     public void update(String username, String newFullName, String newEmail){
-        if (!exists(username)) {
-            throw new NoSuchElementException("No such user in data");
-        }
-
         ValidationUtils.requireNonEmpty(newFullName, "Full Name");
         if (!ValidationUtils.isValidEmail(newEmail)) {
             throw new IllegalArgumentException("Wrong email format");
@@ -77,7 +73,9 @@ public class UserManager implements Repository<User>{
         String normalizedFullName = ValidationUtils.normalizeString(newFullName);
 
         User update = User.create(username, normalizedFullName, newEmail);
-        users.put(username, update);
+        if (users.replace(username, update) == null) {
+            throw new NoSuchElementException("No such user in data");
+        }
     }
 
     @Override
