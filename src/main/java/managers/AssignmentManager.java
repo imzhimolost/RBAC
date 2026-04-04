@@ -7,23 +7,26 @@ import util.ValidationUtils;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class AssignmentManager implements Repository<RoleAssignment>{
-    private final Map<String, RoleAssignment> assignments = new HashMap<>();
+    private final Map<String, RoleAssignment> assignments = new ConcurrentHashMap<>();
 
     @Override
     public void add(RoleAssignment assignment) {
         ValidationUtils.requireNonEmpty(assignment.assignmentId(), "Assignment ID");
-        boolean duplicate = assignments.values().stream()
-                .filter(a -> a.user().equals(assignment.user()))
-                .filter(a -> a.role().equals(assignment.role()))
-                .anyMatch(RoleAssignment::isActive);
+        synchronized (this) {
+            boolean duplicate = assignments.values().stream()
+                    .filter(a -> a.user().equals(assignment.user()))
+                    .filter(a -> a.role().equals(assignment.role()))
+                    .anyMatch(RoleAssignment::isActive);
 
-        if (duplicate) {
-            throw new IllegalStateException("Role already assigned");
+            if (duplicate) {
+                throw new IllegalStateException("Role already assigned");
+            }
+            assignments.put(assignment.assignmentId(), assignment);
         }
-        assignments.put(assignment.assignmentId(), assignment);
     }
 
     public Set<Permission> getUserPermissions(User user) {
@@ -85,22 +88,26 @@ public class AssignmentManager implements Repository<RoleAssignment>{
 
     public void revokeAssignment(String assignmentId){
         ValidationUtils.requireNonEmpty(assignmentId, "Assignment ID");
-        RoleAssignment assignment = assignments.get(assignmentId);
-        if (assignment instanceof PermanentAssignment) {
-            PermanentAssignment permAssigment = (PermanentAssignment) assignment;
+        synchronized (this){
+            RoleAssignment assignment = assignments.get(assignmentId);
+            if (assignment instanceof PermanentAssignment) {
+                PermanentAssignment permAssigment = (PermanentAssignment) assignment;
 
-            permAssigment.revoke();
+                permAssigment.revoke();
+            }
         }
     }
 
     public void extendTemporaryAssignment(String assignmentId, String newExpirationDate){
         ValidationUtils.requireNonEmpty(assignmentId, "Assignment ID");
-        RoleAssignment assignment = assignments.get(assignmentId);
-        if (assignment instanceof TemporaryAssignment) {
-            TemporaryAssignment tempAssognment = (TemporaryAssignment) assignment;
+        synchronized (this){
+            RoleAssignment assignment = assignments.get(assignmentId);
+            if (assignment instanceof TemporaryAssignment) {
+                TemporaryAssignment tempAssognment = (TemporaryAssignment) assignment;
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-            tempAssognment.extend(LocalDateTime.parse(newExpirationDate, formatter).toString());
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+                tempAssognment.extend(LocalDateTime.parse(newExpirationDate, formatter).toString());
+            }
         }
     }
 
@@ -113,6 +120,8 @@ public class AssignmentManager implements Repository<RoleAssignment>{
     }
 
     @Override public void clear() {
-        assignments.clear();
+        synchronized (this) {
+            assignments.clear();
+        }
     }
 }
