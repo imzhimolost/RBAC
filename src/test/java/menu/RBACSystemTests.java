@@ -7,7 +7,9 @@ import model.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import util.AuditLog;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -93,5 +95,32 @@ public class RBACSystemTests {
     @Test
     void testExecutorIsNotNull() {
         assertNotNull(testRBAC.getExecutor(), "ExecutorService must be initialized");
+    }
+
+    @Test
+    void testBackgroundTasksExecution() throws InterruptedException {
+        User user = User.create("temp_user", "Temp", "temp@test.com");
+        testRBAC.getUserManager().add(user);
+
+        testRBAC.startBackgroundTasks(1);
+
+        Thread.sleep(1500);
+
+        List<AuditLog.AuditEntry> logs = AuditLog.getInstance().getAll();
+
+        boolean foundBackgroundLog = logs.stream()
+                .anyMatch(entry -> entry.action().equals("BACKGROUND_CHECK")
+                        && entry.performer().equals("SystemScheduler"));
+
+        assertTrue(foundBackgroundLog);
+
+        AuditLog.AuditEntry schedulerLog = logs.stream()
+                .filter(e -> e.action().equals("BACKGROUND_CHECK"))
+                .findFirst()
+                .orElseThrow();
+
+        assertTrue(schedulerLog.details().contains("Number of users: 2"));
+
+        testRBAC.shutdown();
     }
 }

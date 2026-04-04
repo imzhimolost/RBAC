@@ -115,6 +115,20 @@ public class AssignmentManager implements Repository<RoleAssignment>{
         }
     }
 
+    public int cleanupExpiredAssignments() {
+        int count = 0;
+        for (RoleAssignment assignment : assignments.values()) {
+            if (assignment instanceof TemporaryAssignment temp) {
+                if (temp.isActive() && temp.isExpired()) {
+                    synchronized (this) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
     @Override public boolean remove(RoleAssignment a) {
         return assignments.remove(a.assignmentId()) != null;
     }

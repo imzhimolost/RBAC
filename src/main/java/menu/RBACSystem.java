@@ -7,6 +7,7 @@ import model.*;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class RBACSystem {
@@ -15,6 +16,7 @@ public class RBACSystem {
     AssignmentManager assignmentManager;
     String currentUser;
     private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     public RBACSystem() {
         this.userManager = new UserManager();
@@ -45,11 +47,32 @@ public class RBACSystem {
         return currentUser;
     }
 
+    public void startBackgroundTasks(int intervalSeconds) {
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                int removedCount = assignmentManager.cleanupExpiredAssignments();
+
+                String stats = generateStatistics();
+
+                util.AuditLog.getInstance().log(
+                        "BACKGROUND_CHECK",
+                        "SystemScheduler",
+                        "Assignments",
+                        "Expired roles cleaned: " + removedCount + ". Current " + stats
+                );
+
+            } catch (Exception e) {
+                System.err.println("Ошибка в фоновой задаче: " + e.getMessage());
+            }
+        }, 0, intervalSeconds, TimeUnit.SECONDS);
+    }
+
     public void executeAsyncTask(Runnable task){
         executor.submit(task);
     }
 
     public void shutdown(){
+        scheduler.shutdown();
         executor.shutdown();
         try{
             if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
