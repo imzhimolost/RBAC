@@ -6,7 +6,11 @@ import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class AuditLog {
     private static final AuditLog instance = new AuditLog();
@@ -20,12 +24,34 @@ public class AuditLog {
             String details
     ) {}
 
-    private final List<AuditEntry> entries = new ArrayList<>();
+    private final BlockingQueue<AuditEntry> logQueue = new LinkedBlockingQueue<>();
+    private final List<AuditEntry> entries = Collections.synchronizedList(new ArrayList<>());
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private AuditLog() {
+        Thread worker = new Thread(() -> {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    AuditEntry entry = logQueue.take();
+                    entries.add(entry);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        worker.setDaemon(true);
+        worker.start();
+    }
     public void log(String action, String performer, String target, String details){
         String datetime = LocalDateTime.now().format(FORMATTER);
-        entries.add(new AuditEntry(datetime, action, performer, target, details));
+        AuditEntry entry = new AuditEntry(datetime, action, performer, target, details);
+
+        try {
+            logQueue.put(entry);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            System.err.println("Ошибка добавления лога в очередь: " + e.getMessage());
+        }
     }
 
     public List<AuditEntry> getAll(){
