@@ -6,10 +6,11 @@ import model.Role;
 import util.ValidationUtils;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RoleManager implements Repository<Role>{
-    private final Map<String, Role> rolesById = new HashMap<>();
-    private final Map<String, Role> rolesByName = new HashMap<>();
+    private final Map<String, Role> rolesById = new ConcurrentHashMap<>();
+    private final Map<String, Role> rolesByName = new ConcurrentHashMap<>();
 
     @Override
     public void add(Role role){
@@ -18,27 +19,25 @@ public class RoleManager implements Repository<Role>{
 
         String normalizedName = ValidationUtils.normalizeString(role.getName());
 
-        if(rolesByName.containsKey(normalizedName)){
-            throw new IllegalArgumentException("Role name must be unique");
+        synchronized (this){
+            if(rolesByName.containsKey(normalizedName) || rolesById.containsKey(role.getId())){
+                throw new IllegalArgumentException("Role already exist");
+            }
+            rolesByName.put(normalizedName, role);
+            rolesById.put(role.getId(), role);
         }
-        if(rolesById.containsKey(role.getId())){
-            throw new IllegalArgumentException("Role ID must be unique");
-        }
-
-        rolesByName.put(normalizedName, role);
-        rolesById.put(role.getId(), role);
     }
 
     @Override
     public boolean remove(Role role){
-        Role removedRole = rolesById.remove(role.getId());
-
-        if(removedRole != null){
-            rolesByName.remove(removedRole.getName());
-            return true;
+        synchronized (this){
+            Role removedRole = rolesById.remove(role.getId());
+            if(removedRole != null){
+                rolesByName.remove(ValidationUtils.normalizeString(removedRole.getName()));
+                return true;
+            }
+            return false;
         }
-
-        return false;
     }
 
     @Override
@@ -73,12 +72,16 @@ public class RoleManager implements Repository<Role>{
 
     public void addPermissionToRole(String roleName, Permission permission) {
         ValidationUtils.requireNonEmpty(roleName, "Имя роли");
-        findByName(roleName).ifPresent(role -> role.addPermission(permission));
+        synchronized (this){
+            findByName(roleName).ifPresent(role -> role.addPermission(permission));
+        }
     }
 
     public void removePermissionFromRole(String roleName, Permission permission) {
         ValidationUtils.requireNonEmpty(roleName, "Имя роли");
-        findByName(roleName).ifPresent(role -> role.removePermission(permission));
+        synchronized (this){
+            findByName(roleName).ifPresent(role -> role.removePermission(permission));
+        }
     }
 
     public boolean exists(String name) {
@@ -90,7 +93,9 @@ public class RoleManager implements Repository<Role>{
     }
 
     @Override public void clear() {
-        rolesById.clear();
-        rolesByName.clear();
+        synchronized (this) {
+            rolesById.clear();
+            rolesByName.clear();
+        }
     }
 }
