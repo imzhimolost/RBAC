@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RBACSystemTests {
@@ -61,5 +65,33 @@ public class RBACSystemTests {
         AssignmentManager manager = testRBAC.getAssignmentManager();
 
         assertEquals(1, manager.count(), "Should have 1 assignment");
+    }
+
+    @Test
+    void testExecuteAsyncTask() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicBoolean taskWasRun = new AtomicBoolean(false);
+
+        testRBAC.executeAsyncTask(() -> {
+            taskWasRun.set(true);
+            latch.countDown();
+        });
+
+        boolean completed = latch.await(2, TimeUnit.SECONDS);
+
+        assertTrue(completed, "Task finished not in time");
+        assertTrue(taskWasRun.get());
+    }
+
+    @Test
+    void testShutdown() {
+        testRBAC.shutdown();
+
+        assertTrue(testRBAC.getExecutor().isShutdown(), "ExecutorService must be off");
+    }
+
+    @Test
+    void testExecutorIsNotNull() {
+        assertNotNull(testRBAC.getExecutor(), "ExecutorService must be initialized");
     }
 }

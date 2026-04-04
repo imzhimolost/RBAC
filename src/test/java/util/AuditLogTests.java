@@ -12,7 +12,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AuditLogTest {
+class AuditLogTests {
 
     private AuditLog auditLog;
 
@@ -27,8 +27,14 @@ class AuditLogTest {
     }
 
     @Test
-    void testLogAddsEntry() {
+    void testLogAddsEntry() throws InterruptedException {
         auditLog.log("LOGIN", "admin", "system", "Successful login");
+
+        int attempts = 0;
+        while (auditLog.getAll().isEmpty() && attempts < 10) {
+            Thread.sleep(100);
+            attempts++;
+        }
 
         List<AuditLog.AuditEntry> entries = auditLog.getAll();
 
