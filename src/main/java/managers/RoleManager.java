@@ -1,8 +1,10 @@
 package managers;
 
+import filters.AssignmentFilter;
 import filters.RoleFilter;
 import model.Permission;
 import model.Role;
+import model.RoleAssignment;
 import util.ValidationUtils;
 
 import java.util.*;
@@ -47,6 +49,14 @@ public class RoleManager implements Repository<Role>{
 
     public Optional<Role> findByName(String name) {
         return Optional.ofNullable(rolesByName.get(name));
+    }
+
+    public List<Role> findByFilter(RoleFilter filter) {
+        return rolesByName.values().stream().filter(filter::test).toList();
+    }
+
+    public List<Role> findByFilterParallel(RoleFilter filter) {
+        return rolesByName.values().parallelStream().filter(filter::test).toList();
     }
 
     @Override
