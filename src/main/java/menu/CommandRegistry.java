@@ -562,6 +562,28 @@ public class CommandRegistry {
             System.out.println(report);
             handleExport(scanner, report);
         }));
+
+        //RBAC 5: отчеты с использованием потоков
+        parser.registerCommand("report-users-async", "Запуск генерации отчёта в отдельном потоке", ((scanner, system) -> {
+            System.out.println("Фоновая задача генерации отчёта запущена...");
+
+            system.executeAsyncTask(() -> {
+                String report = new util.ReportGenerator().generateUserReport(system.getUserManager(), system.getAssignmentManager());
+                System.out.println("\nФоновый отчёт готово:\n" + report);
+            });
+        }));
+
+        parser.registerCommand("save-async", "Cохранение данных в файл в фоне", ((scanner, system) -> {
+            System.out.print("Введите имя файла для сохранения: ");
+            String filename = scanner.nextLine();
+            System.out.println("Задача на сохранение в файл '" + filename + "' отправлена в очередь...");
+
+            system.executeAsyncTask(() -> {
+                String report = new util.ReportGenerator().generateUserReport(system.getUserManager(), system.getAssignmentManager());
+                new util.ReportGenerator().exportToFile(report, filename);
+                System.out.println("\nФоновое сохранение завершено в файл: " + filename);
+            });
+        }));
     }
 
     private static void handleExport(Scanner scanner, String report) {
