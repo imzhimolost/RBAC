@@ -66,8 +66,8 @@ public class ReportGeneratorTests {
     @Test
     void testGenerateRoleReport() {
         Role role = new Role("EDITOR", "Can edit news");
-        User u1 = User.create("u1", "User 1", "u1@test.com");
-        User u2 = User.create("u2", "User 2", "u2@test.com");
+        User u1 = User.create("user_1", "User 1", "u1@test.com");
+        User u2 = User.create("user_2", "User 2", "u2@test.com");
         AssignmentMetadata assignmentTest = AssignmentMetadata.now("ivan2008", "some reason");
 
         roleManager.add(role);
@@ -104,7 +104,7 @@ public class ReportGeneratorTests {
         String report = reportGenerator.generatePermissionMatrix(userManager, assignmentManager);
 
         assertTrue(report.contains("USER: dev"));
-        assertTrue(report.contains("RESOURCES: DATABASE, SERVER") || report.contains("RESOURCES: SERVER, DATABASE"));
+        assertTrue(report.contains("RESOURCES: database, server") || report.contains("RESOURCES: server, database"));
     }
 
     @Test

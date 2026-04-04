@@ -17,16 +17,15 @@ import java.util.stream.Collectors;
 
 public class ReportGenerator {
     public String generateUserReport(UserManager userManager, AssignmentManager assignmentManager) {
-        StringBuilder sb = new StringBuilder("--------USER REPORT--------\n");
-        for(User user : userManager.findAll()){
-            sb.append(String.format("USER: %s; EMAIL: %S\n", user.username(), user.email()));
-            List<RoleAssignment> roles = assignmentManager.findByUser(user);
-            sb.append("  ROLE: ").append(roles.isEmpty() ? "No roles" :
-                            roles.stream().map(a -> a.role().getName()).collect(Collectors.joining(", ")))
-                    .append("\n");
-            sb.append("---------------------------");
-        }
-        return sb.toString();
+        return userManager.findAll().parallelStream()
+                .map(user -> {
+                    List<RoleAssignment> roles = assignmentManager.findByUser(user);
+                    String roleNames = roles.isEmpty() ? "No roles" :
+                            roles.stream().map(a -> a.role().getName()).sorted().collect(Collectors.joining(", "));
+
+                    return String.format("USER: %s; EMAIL: %S\n   ROLE: %s\n---------------------------", user.username(), user.email(), roleNames);
+                })
+                .collect(Collectors.joining("\n", "--------USER REPORT--------\n", ""));
     }
 
     public String generateRoleReport(RoleManager roleManager, AssignmentManager assignmentManager){
@@ -40,14 +39,13 @@ public class ReportGenerator {
     }
 
     public String generatePermissionMatrix(UserManager userManager, AssignmentManager assignmentManager){
-        StringBuilder sb = new StringBuilder("--------MATRIX--------\n");
-        for (User user : userManager.findAll()) {
-            Set<Permission> perms = assignmentManager.getUserPermissions(user);
-            String resources = perms.stream().map(Permission::resource).distinct().collect(Collectors.joining(", "));
-            sb.append(String.format("USER: %s | RESOURCES: %s\n", user.username(), resources.isEmpty() ? "NO RESOURCES" : resources));
-            sb.append("----------------------");
-        }
-        return sb.toString();
+        return userManager.findAll().parallelStream()
+                .map(user -> {
+                    Set<Permission> perms = assignmentManager.getUserPermissions(user);
+                    String resources = perms.stream().map(Permission::resource).distinct().sorted().collect(Collectors.joining(", "));
+                    return String.format("USER: %s | RESOURCES: %s\n----------------------", user.username(), resources.isEmpty() ? "NO RESOURCES" : resources);
+                })
+                .collect(Collectors.joining("\n", "--------MATRIX--------\n", ""));
     }
 
     public void exportToFile(String report, String filename){
